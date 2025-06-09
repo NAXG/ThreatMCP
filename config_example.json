@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "threatbook": {
+      "command": "python",
+      "args": ["/path/to/your/ThreatMCP/run_server.py"],
+      "env": {
+        "THREATBOOK_API_KEY": "请替换为您的微步在线威胁分析API密钥"
+      }
+    }
+  }
+}
