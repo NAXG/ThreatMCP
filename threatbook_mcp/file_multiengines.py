@@ -42,7 +42,7 @@ class FileMultiEnginesTool:
                 )]
             
             # 调用微步在线威胁分析API
-            result = self.client.get_file_multiengines(hash_value)
+            result = await self.client.get_file_multiengines(hash_value)
             
             # 格式化结果
             formatted_result = self.format_result(result)

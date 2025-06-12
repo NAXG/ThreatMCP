@@ -42,7 +42,7 @@ class URLReportTool:
                 )]
             
             # 调用微步在线威胁分析API
-            result = self.client.get_url_report(url)
+            result = await self.client.get_url_report(url)
             
             # 格式化结果
             formatted_result = self.format_result(result)

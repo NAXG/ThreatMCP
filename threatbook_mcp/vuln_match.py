@@ -62,7 +62,7 @@ class VulnMatchTool:
         """执行产品漏洞匹配查询"""
         try:
             # 调用微步在线威胁分析API
-            result = self.client.get_vuln_match(arguments)
+            result = await self.client.get_vuln_match(arguments)
             
             # 格式化结果
             formatted_result = self.format_result(result)

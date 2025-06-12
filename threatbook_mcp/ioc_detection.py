@@ -50,7 +50,7 @@ class IOCDetectionTool:
             lang = arguments.get("lang", "zh")
             
             # 调用微步在线威胁分析API
-            result = self.client.get_ioc_detection(resource, lang)
+            result = await self.client.get_ioc_detection(resource, lang)
             
             # 格式化结果
             formatted_result = self.format_result(result)

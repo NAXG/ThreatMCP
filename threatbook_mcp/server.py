@@ -6,9 +6,8 @@ import logging
 import os
 import sys
 from typing import Any, Dict, List, Optional
-import asyncio
 
-import requests
+import httpx
 from mcp.server import NotificationOptions, Server
 from mcp.server.models import InitializationOptions
 import mcp.server.stdio
@@ -50,13 +49,18 @@ class ThreatBookConfig(BaseModel):
 
 
 class ThreatBookClient:
-    """微步在线威胁分析API客户端"""
-    
+    """微步在线威胁分析API异步客户端"""
+
     def __init__(self, config: ThreatBookConfig):
         self.config = config
-        self.session = requests.Session()
-        
-    def get_ip_reputation(self, ip: str) -> Dict[str, Any]:
+        # 使用单个 AsyncClient 复用连接，HTTP/2 可提升性能
+        self.session = httpx.AsyncClient(timeout=config.timeout)
+
+    async def aclose(self):
+        """关闭底层 HTTP 连接"""
+        await self.session.aclose()
+
+    async def get_ip_reputation(self, ip: str) -> Dict[str, Any]:
         """查询IP信誉"""
         url = f"{self.config.base_url}/scene/ip_reputation"
         params = {
@@ -65,21 +69,17 @@ class ThreatBookClient:
         }
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_ioc_detection(self, resource: str, lang: str = "zh") -> Dict[str, Any]:
+    async def get_ioc_detection(self, resource: str, lang: str = "zh") -> Dict[str, Any]:
         """失陷检测"""
         url = f"{self.config.base_url}/scene/ioc"
         params = {
@@ -89,21 +89,17 @@ class ThreatBookClient:
         }
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_domain_context(self, domain: str, lang: str = "zh") -> Dict[str, Any]:
+    async def get_domain_context(self, domain: str, lang: str = "zh") -> Dict[str, Any]:
         """域名上下文查询"""
         url = f"{self.config.base_url}/scene/domain_context"
         params = {
@@ -113,21 +109,17 @@ class ThreatBookClient:
         }
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_ip_analysis(self, ip: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
+    async def get_ip_analysis(self, ip: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
         """IP分析"""
         url = f"{self.config.base_url}/ip/query"
         params = {
@@ -139,21 +131,17 @@ class ThreatBookClient:
             params["exclude"] = exclude
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_domain_analysis(self, domain: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
+    async def get_domain_analysis(self, domain: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
         """域名分析"""
         url = f"{self.config.base_url}/domain/query"
         params = {
@@ -165,21 +153,17 @@ class ThreatBookClient:
             params["exclude"] = exclude
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_ip_advanced(self, ip: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
+    async def get_ip_advanced(self, ip: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
         """IP高级查询"""
         url = f"{self.config.base_url}/ip/adv_query"
         params = {
@@ -191,21 +175,17 @@ class ThreatBookClient:
             params["exclude"] = exclude
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_domain_advanced(self, domain: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
+    async def get_domain_advanced(self, domain: str, exclude: str = "", lang: str = "zh") -> Dict[str, Any]:
         """域名高级查询"""
         url = f"{self.config.base_url}/domain/adv_query"
         params = {
@@ -217,21 +197,17 @@ class ThreatBookClient:
             params["exclude"] = exclude
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_subdomain(self, domain: str, lang: str = "zh") -> Dict[str, Any]:
+    async def get_subdomain(self, domain: str, lang: str = "zh") -> Dict[str, Any]:
         """子域名查询"""
         url = f"{self.config.base_url}/domain/sub_domains"
         params = {
@@ -241,21 +217,17 @@ class ThreatBookClient:
         }
         
         try:
-            response = self.session.get(
-                url, 
-                params=params, 
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
     
-    def get_file_analysis(self, hash_value: str, sandbox_type: str = "", query_fields: str = "") -> Dict[str, Any]:
+    async def get_file_analysis(self, hash_value: str, sandbox_type: str = "", query_fields: str = "") -> Dict[str, Any]:
         """文件信誉报告"""
         url = f"{self.config.base_url}/file/report"
         params = {
@@ -268,21 +240,17 @@ class ThreatBookClient:
             params["query_fields"] = query_fields
 
         try:
-            response = self.session.get(
-                url,
-                params=params,
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
 
-    def get_file_multiengines(self, hash_value: str) -> Dict[str, Any]:
+    async def get_file_multiengines(self, hash_value: str) -> Dict[str, Any]:
         """文件反病毒引擎检测报告"""
         url = f"{self.config.base_url}/file/report/multiengines"
         params = {
@@ -291,21 +259,17 @@ class ThreatBookClient:
         }
 
         try:
-            response = self.session.get(
-                url,
-                params=params,
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
 
-    def upload_file_analysis(self, file_path: str, sandbox_type: str = "", run_time: int = 60) -> Dict[str, Any]:
+    async def upload_file_analysis(self, file_path: str, sandbox_type: str = "", run_time: int = 60) -> Dict[str, Any]:
         """提交文件分析"""
         url = f"{self.config.base_url}/file/upload"
         data = {
@@ -318,25 +282,20 @@ class ThreatBookClient:
 
         try:
             with open(file_path, 'rb') as f:
-                files = {'file': f}
-                response = self.session.post(
-                    url,
-                    data=data,
-                    files=files,
-                    timeout=self.config.timeout
-                )
+                files = {'file': (os.path.basename(file_path), f)}
+                response = await self.session.post(url, data=data, files=files)
             response.raise_for_status()
             return response.json()
         except FileNotFoundError:
             raise Exception(f"文件不存在: {file_path}")
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
 
-    def scan_url(self, url: str) -> Dict[str, Any]:
+    async def scan_url(self, url: str) -> Dict[str, Any]:
         """提交URL分析"""
         api_url = f"{self.config.base_url}/url/scan"
         params = {
@@ -345,21 +304,17 @@ class ThreatBookClient:
         }
 
         try:
-            response = self.session.get(
-                api_url,
-                params=params,
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(api_url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
 
-    def get_url_report(self, url: str) -> Dict[str, Any]:
+    async def get_url_report(self, url: str) -> Dict[str, Any]:
         """URL信誉报告"""
         api_url = f"{self.config.base_url}/url/report"
         params = {
@@ -368,21 +323,17 @@ class ThreatBookClient:
         }
 
         try:
-            response = self.session.get(
-                api_url,
-                params=params,
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(api_url, params=params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
 
-    def get_vulnerability_info(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_vulnerability_info(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """漏洞情报"""
         api_url = f"{self.config.base_url}/vuln"
         api_params = {
@@ -391,21 +342,17 @@ class ThreatBookClient:
         api_params.update(params)
 
         try:
-            response = self.session.get(
-                api_url,
-                params=api_params,
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(api_url, params=api_params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
             logger.error(f"解析API响应失败: {e}")
             raise Exception(f"响应解析失败: {str(e)}")
 
-    def get_vuln_match(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_vuln_match(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """产品漏洞匹配"""
         api_url = f"{self.config.base_url}/vuln/match"
         api_params = {
@@ -414,14 +361,10 @@ class ThreatBookClient:
         api_params.update(params)
 
         try:
-            response = self.session.get(
-                api_url,
-                params=api_params,
-                timeout=self.config.timeout
-            )
+            response = await self.session.get(api_url, params=api_params)
             response.raise_for_status()
             return response.json()
-        except requests.exceptions.RequestException as e:
+        except httpx.RequestError as e:
             logger.error(f"请求微步在线威胁分析API失败: {e}")
             raise Exception(f"API请求失败: {str(e)}")
         except json.JSONDecodeError as e:
@@ -645,4 +588,12 @@ async def main():
     except Exception as e:
         logger.error(f"服务器运行错误: {e}")
         sys.exit(1)
+    finally:
+        # 关闭底层 HTTP 连接
+        global threatbook_client
+        if threatbook_client is not None:
+            try:
+                await threatbook_client.aclose()
+            except Exception:
+                pass
 

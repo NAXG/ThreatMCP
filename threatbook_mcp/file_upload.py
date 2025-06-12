@@ -56,7 +56,7 @@ class FileUploadTool:
             run_time = arguments.get("run_time", 60)
             
             # 调用微步在线威胁分析API
-            result = self.client.upload_file_analysis(file_path, sandbox_type, run_time)
+            result = await self.client.upload_file_analysis(file_path, sandbox_type, run_time)
             
             # 格式化结果
             formatted_result = self.format_result(result)

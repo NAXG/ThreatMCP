@@ -53,7 +53,7 @@ class FileAnalysisTool:
             query_fields = arguments.get("query_fields", "")
             
             # 调用微步在线威胁分析API
-            result = self.client.get_file_analysis(hash_value, sandbox_type, query_fields)
+            result = await self.client.get_file_analysis(hash_value, sandbox_type, query_fields)
             
             # 格式化结果
             formatted_result = self.format_result(result)

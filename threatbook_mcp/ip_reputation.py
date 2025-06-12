@@ -42,8 +42,8 @@ class IPReputationTool:
                     text="错误：缺少必需的参数 'ip'"
                 )]
             
-            # 调用微步在线威胁分析API
-            result = self.client.get_ip_reputation(ip)
+            # 调用微步在线威胁分析API (异步)
+            result = await self.client.get_ip_reputation(ip)
             
             # 格式化结果
             formatted_result = self.format_result(result)
