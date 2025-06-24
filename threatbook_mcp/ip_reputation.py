@@ -126,7 +126,6 @@ class IPReputationTool:
         
         # 构建格式化输出
         response_code = result.get("response_code", 0)
-        status_icon = ThreatBookResponseHandler.get_success_icon(response_code)
 
         output = [
             f"🔍 IP信誉查询结果",
